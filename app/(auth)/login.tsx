@@ -44,9 +44,9 @@ export default function LoginScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>Connexion</Text>
         <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
-        <Text style={styles.subtitle}>Veuillez entrer votre numéro ou e-mail pour vous connecter</Text>
+        <Text style={styles.subtitle}>Veuillez entrer votre email pour vous connecter</Text>
         <TextInput
-          placeholder="Téléphone"
+          placeholder="Email"
           style={styles.input}
           value={identifiant}
           onChangeText={setIdentifiant}
@@ -68,9 +68,6 @@ export default function LoginScreen() {
         <Text style={styles.forgotPassword}>Mot de passe oublié ?</Text>
         <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? 'Connexion...' : 'Connexion'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => router.replace('../register')}>
-          <Text style={styles.buttonText}>Creer compte</Text>
         </TouchableOpacity>
         <Text style={styles.welcomeText}>Bienvenu à la maison de la république{'\n'}votre restaurant idéal</Text>
       </View>

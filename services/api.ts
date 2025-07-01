@@ -12,6 +12,7 @@ const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
+  console.log('Token utilisé:', token);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,6 +26,14 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+
+
+export const getCommandes = async () => {
+  
+  return api.get('/commandes');
+};
+
 
 // Récupérer tous les plats 
 export const getDishes = () => api.get('/plats');
@@ -101,6 +110,7 @@ export const getOrders = () => api.get('/commandes');
 export const getUserProfile = async (): Promise<ApiResponse> => {
   try {
     const response = await api.get('/me');
+    console.log('Réponse /me:', response); // Ajoute ce log
     return response;
   } catch (error: any) {
     throw error.response?.data ?? error;

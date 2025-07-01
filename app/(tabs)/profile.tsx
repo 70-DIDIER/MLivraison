@@ -42,7 +42,7 @@ export default function Profile() {
           <Image source={require('../../assets/images/profile.png')} style={styles.profileImage} />
           <View>
             <Text style={styles.name}>{user?.name || 'Utilisateur'}</Text>
-            <Text style={styles.email}>{user?.telephone}</Text>
+            <Text style={styles.email}>{user?.email}</Text>
           </View>
         </View>
 
@@ -128,7 +128,7 @@ export default function Profile() {
             <Text>Nom : Maison de la République</Text>
             <Text>Téléphone : +228 99 57 71 07</Text>
             <Text>Email : contact@mrepublique.com</Text>
-            <Text>Adresse : 123, Lomégan près du campus de l'université de Lomé</Text>
+            <Text>Adresse : 123, Lomégan près du campus de luniversité de Lomé</Text>
             <Pressable
               style={{ marginTop: 20, backgroundColor: colors.primary, padding: 10, borderRadius: 5 }}
               onPress={() => setModalVisible(false)}

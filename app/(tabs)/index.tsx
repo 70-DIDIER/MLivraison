@@ -1,372 +1,274 @@
-// import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-    Alert,
-    Dimensions,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    // TextInput,
-    TouchableOpacity,
-    View
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import MyCarousel from '../../components/carousel';
-import Header from '../../components/header-1';
-import NouveauxSection from '../../components/nouveauxsection';
-import { colors } from '../../constants/Colors';
-import { useCart } from '../../context/CartContext';
-import { getRandomDish } from '../../services/api';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Collapsible from 'react-native-collapsible';
+import { getCommandes } from '../../services/api';
 
-const { height } = Dimensions.get('window');
-
-const Index = () => {
-  const [popularDish, setPopularDish] = useState<any>(null);
-  const [loadingPopular, setLoadingPopular] = useState(true);
-  const router = useRouter();
-  const { addToCart } = useCart();
-
-  useEffect(() => {
-    const fetchPopular = async () => {
-      setLoadingPopular(true);
-      try {
-        const dish = await getRandomDish();
-        console.log('Plat populaire récupéré :', dish);
-        setPopularDish(dish);
-      } catch (error) {
-        console.error('Erreur lors de la récupération du plat populaire :', error);
-      } finally {
-        setLoadingPopular(false);
-      }
-    };
-    fetchPopular();
-  }, []);
-
-  const getImageUrl = (imageUrl: string) => {
-    if (!imageUrl) return 'https://via.placeholder.com/100';
-    return Platform.OS === 'android' ? imageUrl.replace('127.0.0.1', '10.0.2.2') : imageUrl;
-  };
-
-  const handleCategoryPress = (category: string) => {
-    router.push({
-      pathname: '/show',
-      params: { category: category.toLowerCase() },
-    });
-  };
-
-  const handleDishPress = (id: string) => {
-    router.push(`/show/${id}`);
-  };
-
-  // Fonction pour ajouter au panier et afficher une alerte
-  const handleOrder = (dish: any) => {
-    addToCart({
-      id: dish.id.toString(),
-      nom: dish.nom || 'Nom inconnu',
-      prix: parseFloat(dish.prix) || 0,
-      image_url: dish.image_url || '',
-      quantity: 1,
-    });
-    Alert.alert(
-      'Ajouté au panier',
-      dish.nom ? `${dish.nom} a bien été ajouté au panier !` : 'Plat ajouté au panier !',
-      [
-        { text: 'Voir le panier', onPress: () => router.push('/cart') },
-        { text: 'Fermer', style: 'cancel' },
-      ]
-    );
-  };
-
-  return (
-    <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <StatusBar barStyle="light-content" translucent={false} backgroundColor="#72815A" />
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <Header />
-          <View style={styles.content}>
-            {/* Carousel */}
-            <View style={styles.carousel}>
-              <MyCarousel />
-            </View>
-            {/* Catégories */}
-            <View style={styles.categoriesContainer}>
-              <Text style={styles.title}>Catégories</Text>
-              <View style={styles.categories}>
-                {['Entré', 'Résistance', 'Déssert', 'Rafraîchissement'].map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.categoryButton}
-                    onPress={() => handleCategoryPress(item)}
-                  >
-                    <Text style={styles.categoryText}>{item}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-            {/* Section Nouveaux */}
-            <View style={styles.section}>
-              <NouveauxSection />
-            </View>
-            {/* Section Populaire */}
-            <View style={styles.popularCardContainer}>
-              <Text style={styles.title}>Populaire</Text>
-              {loadingPopular ? (
-                <Text style={styles.loadingText}>Chargement...</Text>
-              ) : popularDish ? (
-                <TouchableOpacity
-                  style={styles.popularCard}
-                  onPress={() => handleDishPress(popularDish.id)}
-                >
-                  <View style={styles.popularContent}>
-                    <Text style={styles.popularTitle}>{popularDish.nom}</Text>
-                    <Text style={styles.popularDesc} numberOfLines={2}>{popularDish.description}</Text>
-                    <View style={styles.popularFooter}>
-                      <Text style={styles.popularPrice}>{parseInt(popularDish.prix, 10)} FCFA</Text>
-                      <TouchableOpacity
-                        style={styles.buyButton}
-                        onPress={() => handleOrder(popularDish)}
-                      >
-                        <Text style={styles.buyButtonText}>Commander</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <Image
-                    source={{ uri: getImageUrl(popularDish.image_url) }}
-                    style={styles.popularImage}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              ) : (
-                <Text style={styles.errorText}>Aucun plat populaire trouvé.</Text>
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+type Plat = {
+  nom: string;
+  // Ajoutez d'autres propriétés si nécessaire
 };
 
-export default Index;
+type Commande = {
+  id: number | string;
+  plats: Plat[];
+  user?: { name?: string };
+  adresse_livraison?: string;
+  distance?: number | string;
+  created_at: string;
+  statut?: string;
+  montant_total?: number | string;
+  frais_livraison?: number | string;
+  type_livraison?: string;
+  est_paye?: boolean;
+  localisation?: string;
+  commentaire?: string;
+  latitude?: string;
+  longitude?: string;
+};
+
+const PRIMARY = '#72815A';
+const SECONDARY = '#000';
+
+export default function CommandesScreen() {
+  const [commandes, setCommandes] = useState<Commande[]>([]);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCommandes = async () => {
+      try {
+        const res = await getCommandes();
+        console.log('Réponse /commandes:', res); // Ajoute ce log
+        setCommandes(Array.isArray(res) ? res : []);
+      } catch (err) {
+        console.log('Erreur récupération:', err);
+        setCommandes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCommandes();
+  }, []);
+
+  const toggleCollapse = (index: number) => {
+    setActiveIndex(activeIndex === index ? null : index);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2e7d32" />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.container}>
+      {commandes.map((commande, index) => {
+        const platPrincipal = commande.plats && commande.plats.length > 0 ? commande.plats[0] : null;
+        const isActive = activeIndex === index;
+        return (
+          <View key={commande.id}>
+            <View style={[
+              styles.card,
+              isActive && styles.cardActive
+            ]}>
+              <TouchableOpacity
+                onPress={() => toggleCollapse(index)}
+                style={[
+                  styles.header,
+                  isActive && styles.headerActive
+                ]}
+                activeOpacity={0.85}
+              >
+                <View style={styles.headerRow}>
+                  <Text
+                    style={styles.title}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    🍽️ Livraison d&apos;un plat de {platPrincipal?.nom || 'Plat inconnu'}
+                  </Text>
+                  <Text style={[
+                    styles.arrow,
+                    isActive && styles.arrowOpen
+                  ]}>
+                    {isActive ? '▲' : '▼'}
+                  </Text>
+                </View>
+                <Text style={styles.subtitle}>
+                  {commande.user?.name || 'Client inconnu'} - {commande.adresse_livraison}
+                </Text>
+                <Text style={styles.subtitle}>
+                  {commande.distance ? `${commande.distance} km` : 'Distance inconnue'} | {new Date(commande.created_at).toLocaleTimeString()} | {commande.statut}
+                </Text>
+              </TouchableOpacity>
+              <Collapsible collapsed={!isActive}>
+                <View style={styles.details}>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.label}>Montant total :</Text>
+                    <Text style={styles.value}>{commande.montant_total} FCFA</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.label}>Frais livraison :</Text>
+                    <Text style={styles.value}>{commande.frais_livraison} FCFA</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.label}>Type livraison :</Text>
+                    <Text style={styles.value}>{commande.type_livraison}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.label}>Paiement :</Text>
+                    <Text style={styles.value}>{commande.est_paye ? 'Oui' : 'Non'}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.label}>Localisation :</Text>
+                    {commande.latitude && commande.longitude ? (
+                      <Text
+                        style={[styles.value, { color: PRIMARY, textDecorationLine: 'underline' }]}
+                        onPress={() =>
+                          Linking.openURL(
+                            `https://www.google.com/maps/dir/?api=1&destination=${commande.latitude},${commande.longitude}`
+                          )
+                        }
+                      >
+                        Ouvrir dans Google Maps
+                      </Text>
+                    ) : (
+                      <Text style={styles.value}>Non précisée</Text>
+                    )}
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.label}>Commentaire :</Text>
+                    <Text style={styles.value}>{commande.commentaire || 'Aucun'}</Text>
+                  </View>
+                </View>
+              </Collapsible>
+            </View>
+            {/* Séparateur entre les commandes */}
+            {index < commandes.length - 1 && <View style={styles.separator} />}
+          </View>
+        );
+      })}
+      {commandes.length === 0 && (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Aucune commande à afficher.</Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    // backgroundColor: '#ffffff',
-  },
   container: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
+    padding: 12,
+    paddingTop: 50, // espace pour la barre de statut
+    backgroundColor: '#f4f7f6',
   },
-  scrollContent: {
-    flexGrow: 1,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 0,
+    padding: 16,
+    elevation: 4,
+    shadowColor: PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    transition: 'box-shadow 0.2s',
+  },
+  cardActive: {
+    backgroundColor: '#e6f9f0',
+    shadowOpacity: 0.22,
+    borderColor: PRIMARY,
+    elevation: 8,
   },
   header: {
-    backgroundColor: '#72815A',
-    width: '100%',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderRadius: 12,
+    paddingHorizontal: 2,
+    backgroundColor: '#fff',
   },
-  content: {
-    flex: 1,
-  },
-  carousel: {
-    marginTop: 10,
-    height: height * 0.25,
-    marginBottom: 15,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#859163',
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginHorizontal: 16,
-    marginVertical: 15,
-    backgroundColor: 'white',
-  },
-  input: {
-    flex: 1,
-    padding: 12,
-    fontSize: 16,
-    color: colors.text,
-  },
-  searchButton: {
-    backgroundColor: '#859163',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-  },
-  categoriesContainer: {
-    marginHorizontal: 16,
-    marginTop: 10,
+  headerActive: {
+    backgroundColor: '#eaf3e2',
+    borderRadius: 12,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 5,
-    marginBottom: 10,
-    color: colors.text,
-  },
-  categories: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginHorizontal: 5,
-  },
-  categoryButton: {
-    backgroundColor: '#859163',
-    borderRadius: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 10,
-    width: '48%',
-    alignItems: 'center',
-  },
-  categoryText: {
-    color: 'white',
-    fontWeight: '500',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  section: {
-    marginVertical: 10,
-  },
-  popularCardContainer: {
-    marginVertical: 10,
-    paddingHorizontal: 16,
-  },
-  popularCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: 15,
-    padding: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    marginBottom: 10,
-  },
-  popularContent: {
     flex: 1,
-    marginRight: 10,
-  },
-  popularTitle: {
+    flexShrink: 1,
     fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 4,
-    color: colors.text,
+    fontSize: 18,
+    color: PRIMARY,
+    marginBottom: 2,
+    letterSpacing: 0.2,
   },
-  popularDesc: {
+  arrow: {
+    fontSize: 20,
+    color: SECONDARY,
+    marginLeft: 8,
+    flexShrink: 0,
+    transform: [{ rotate: '0deg' }],
+    transition: 'transform 0.2s',
+  },
+  arrowOpen: {
+    color: PRIMARY,
+    transform: [{ rotate: '180deg' }],
+  },
+  subtitle: {
+    color: SECONDARY,
     fontSize: 13,
-    color: '#555',
+    marginBottom: 2,
+    marginTop: 2,
+  },
+  details: {
+    marginTop: 14,
+    paddingLeft: 5,
+    borderTopWidth: 1,
+    borderTopColor: PRIMARY,
+    paddingTop: 12,
+    backgroundColor: '#f8fcfa',
+    borderRadius: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
-  popularFooter: {
+  label: {
+    fontWeight: '600',
+    color: SECONDARY,
+  },
+  value: {
+    color: PRIMARY,
+    fontWeight: '500',
+  },
+  separator: {
+    height: 18,
+    backgroundColor: 'transparent',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  emptyText: {
+    color: '#888',
+    fontSize: 16,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  popularPrice: {
-    fontWeight: 'bold',
-    fontSize: 15,
-    color: colors.primary,
-  },
-  buyButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 5,
-    paddingHorizontal: 18,
-    paddingVertical: 6,
-  },
-  buyButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-  popularImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 15,
-    backgroundColor: '#eee',
-  },
-  loadingText: {
-    textAlign: 'center',
-    color: '#555',
-    fontSize: 16,
-  },
-  errorText: {
-    textAlign: 'center',
-    color: 'red',
-    fontSize: 16,
-  },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2000,
-    elevation: 20,
-  },
-  modalContentFix: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: 24,
-    width: Math.round(Dimensions.get('window').width * 0.9),
-    maxWidth: 400,
-    alignItems: 'center',
-    elevation: 10,
-    zIndex: 1001,
-  },
-  modalIcon: {
-    marginBottom: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 10,
-  },
-  modalMessage: {
-    fontSize: 16,
-    color: colors.secondary,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-  },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  viewCartButton: {
-    backgroundColor: '#72815A',
-  },
-  closeButton: {
-    backgroundColor: '#859163',
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
+    marginBottom: 2,
   },
 });

@@ -5,7 +5,7 @@ import React, { createContext, useEffect, useState } from 'react';
 interface User {
   id: number;
   name: string;
-  telephone: string;
+  email: string;
 }
 
 interface AuthContextData {
@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren<object>> = ({ childr
       setUser({
         id: userData.id,
         name: userData.name,
-        telephone: userData.telephone,
+        email: userData.email,
       });
     } catch (error) {
       console.error('Erreur lors du chargement des données utilisateur', error);

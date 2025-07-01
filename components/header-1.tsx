@@ -10,11 +10,11 @@ const Header = () => {
         style={styles.logo}
       />
       <Text style={styles.title}>M&#39;Republique</Text>
-      <Image
+      {/* <Image
         // Vérifie que le chemin est correct
         source={require('../assets/images/profile.png')}
         style={styles.profilePic}
-      />
+      /> */}
     </View>
   );
 };

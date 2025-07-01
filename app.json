@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "M'Republique",
-    "slug": "Mrepublique",
+    "name": "M'Livraison",
+    "slug": "Mlivraison",
     "version": "1.0.0",
     "platforms": ["ios", "android", "web"],
     "assetBundlePatterns": ["**/*"],
@@ -12,17 +12,12 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "package": "com.tonorganisation.mrepublique",
+      "package": "com.tonorganisation.mlivraison",
       "versionCode": 1
     },
     "ios": {
-      "bundleIdentifier": "com.tonorganisation.mrepublique",
+      "bundleIdentifier": "com.tonorganisation.mlivraison",
       "buildNumber": "1.0.0"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "8d1f9362-80d1-4d05-abbb-de801204e671"
-      }
     }
   }
 }
