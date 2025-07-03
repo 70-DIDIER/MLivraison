@@ -33,7 +33,6 @@ function RootLayoutNav() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#fff" }}>
-        {/* Remplace le chemin par celui de ton logo si tu veux */}
         <Image source={require("../assets/images/logo.png")} style={{ width: 120, height: 120, marginBottom: 24 }} />
         <ActivityIndicator size="large" color="#000" />
       </View>

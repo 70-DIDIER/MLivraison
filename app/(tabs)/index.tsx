@@ -1,7 +1,8 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Collapsible from 'react-native-collapsible';
-import { getCommandes } from '../../services/api';
+import { getCommandes, prendreLivraison } from '../../services/api';
 
 type Plat = {
   nom: string;
@@ -11,7 +12,7 @@ type Plat = {
 type Commande = {
   id: number | string;
   plats: Plat[];
-  user?: { name?: string };
+  user?: { name?: string; telephone?: string };
   adresse_livraison?: string;
   distance?: number | string;
   created_at: string;
@@ -21,7 +22,6 @@ type Commande = {
   type_livraison?: string;
   est_paye?: boolean;
   localisation?: string;
-  commentaire?: string;
   latitude?: string;
   longitude?: string;
 };
@@ -33,26 +33,31 @@ export default function CommandesScreen() {
   const [commandes, setCommandes] = useState<Commande[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+
+  const fetchCommandes = async () => {
+    try {
+      if (!loading) setRefreshing(true);
+      const res = await getCommandes();
+      setCommandes(Array.isArray(res) ? res : []);
+    } catch (err) {
+      console.log('Erreur récupération:', err);
+      setCommandes([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCommandes = async () => {
-      try {
-        const res = await getCommandes();
-        console.log('Réponse /commandes:', res); // Ajoute ce log
-        setCommandes(Array.isArray(res) ? res : []);
-      } catch (err) {
-        console.log('Erreur récupération:', err);
-        setCommandes([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchCommandes();
   }, []);
 
   const toggleCollapse = (index: number) => {
     setActiveIndex(activeIndex === index ? null : index);
   };
+
 
   if (loading) {
     return (
@@ -64,6 +69,18 @@ export default function CommandesScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Bouton Recharger */}
+      <View style={{ alignItems: 'flex-end', marginBottom: 10 }}>
+        <TouchableOpacity
+          style={styles.reloadButton}
+          onPress={fetchCommandes}
+          disabled={refreshing || loading}
+        >
+          <Text style={styles.reloadButtonText}>
+            {refreshing ? 'Rechargement...' : 'Recharger'}
+          </Text>
+        </TouchableOpacity>
+      </View>
       {commandes.map((commande, index) => {
         const platPrincipal = commande.plats && commande.plats.length > 0 ? commande.plats[0] : null;
         const isActive = activeIndex === index;
@@ -100,7 +117,18 @@ export default function CommandesScreen() {
                   {commande.user?.name || 'Client inconnu'} - {commande.adresse_livraison}
                 </Text>
                 <Text style={styles.subtitle}>
-                  {commande.distance ? `${commande.distance} km` : 'Distance inconnue'} | {new Date(commande.created_at).toLocaleTimeString()} | {commande.statut}
+                  {commande.distance ? `${commande.distance} km` : 'Distance inconnue'} | {new Date(commande.created_at).toLocaleTimeString()} | 
+                  <Text
+                    style={
+                      commande.statut === 'en_cours'
+                        ? styles.statutEncours
+                        : commande.statut === 'livré'
+                        ? styles.statutLivre
+                        : styles.statutDefault
+                    }
+                  >
+                    {commande.statut}
+                  </Text>
                 </Text>
               </TouchableOpacity>
               <Collapsible collapsed={!isActive}>
@@ -139,8 +167,37 @@ export default function CommandesScreen() {
                     )}
                   </View>
                   <View style={styles.detailRow}>
-                    <Text style={styles.label}>Commentaire :</Text>
-                    <Text style={styles.value}>{commande.commentaire || 'Aucun'}</Text>
+                    <Text style={styles.label}>Téléphone :</Text>
+                    <Text style={styles.value}>{commande.user?.telephone || 'Aucun'}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, width: '100%' }}>
+                    {/* Bouton Téléphone */}
+                    <TouchableOpacity
+                      style={styles.phoneButton}
+                      onPress={() => {
+                        if (commande.user?.telephone) {
+                          Linking.openURL(`tel:${commande.user.telephone}`);
+                        }
+                      }}
+                      disabled={!commande.user?.telephone}
+                    >
+                      <Text style={styles.phoneButtonText}>Téléphone</Text>
+                    </TouchableOpacity>
+                    {/* Bouton Prendre */}
+                    <TouchableOpacity
+                      style={styles.takeButton}
+                      onPress={async () => {
+                        try {
+                          await prendreLivraison(String(commande.id));
+                          setCommandes(prev => prev.filter(c => c.id !== commande.id));
+                          // router.push('/menu');
+                        } catch {
+                          alert("Erreur lors de la prise de la livraison");
+                        }
+                      }}
+                    >
+                      <Text style={styles.takeButtonText}>Prendre</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </Collapsible>
@@ -162,7 +219,7 @@ export default function CommandesScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 12,
-    paddingTop: 50, // espace pour la barre de statut
+    // paddingTop: 50, // espace pour la barre de statut
     backgroundColor: '#f4f7f6',
   },
   loadingContainer: {
@@ -183,7 +240,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    transition: 'box-shadow 0.2s',
+    // transition: 'box-shadow 0.2s',
   },
   cardActive: {
     backgroundColor: '#e6f9f0',
@@ -218,7 +275,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     flexShrink: 0,
     transform: [{ rotate: '0deg' }],
-    transition: 'transform 0.2s',
+    // hy
   },
   arrowOpen: {
     color: PRIMARY,
@@ -270,5 +327,82 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 2,
+  },
+  boutonPrendreLivraison: {
+    marginTop: 12,
+    backgroundColor: PRIMARY,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  boutonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  takeButton: {
+    backgroundColor: '#72815A',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  takeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  reloadButton: {
+    backgroundColor: '#72815A',
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    marginBottom: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 1,
+  },
+  reloadButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  phoneButton: {
+    backgroundColor: '#72815A',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 1,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  phoneButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  statutEncours: {
+    color: 'green',
+    fontWeight: 'bold',
+  },
+  statutLivre: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
+  statutDefault: {
+    color: '#888',
+    fontWeight: 'bold',
   },
 });

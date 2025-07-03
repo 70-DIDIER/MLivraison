@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { useContext, useState } from 'react';
 import { Alert, Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Header from '../../components/header-1';
 import { colors } from '../../constants/Colors';
 
 export default function Profile() {
@@ -36,7 +35,7 @@ export default function Profile() {
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
     <View style={styles.container}>
-      <Header  />
+      {/* <Header  /> */}
       <View style={styles.content}>
         <View style={styles.header}>
           <Image source={require('../../assets/images/profile.png')} style={styles.profileImage} />
