@@ -1,50 +1,85 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../constants/Colors'; // Assurez-vous que le chemin est correct
+import { colors } from '../constants/Colors';
 
 const Header = () => {
   return (
     <View style={styles.headerContainer}>
-      <Image
-        source={require('../assets/images/logo.png')}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>M&#39;Republique</Text>
-      {/* <Image
-        // Vérifie que le chemin est correct
-        source={require('../assets/images/profile.png')}
-        style={styles.profilePic}
-      /> */}
+      <View style={styles.leftSection}>
+        <View style={styles.logoWrapper}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+        </View>
+        <View>
+          <Text style={styles.title}>M'Republique</Text>
+          <Text style={styles.subtitle}>Espace livreur</Text>
+        </View>
+      </View>
+      <View style={styles.statusBadge}>
+        <Ionicons name="wifi" size={12} color="#fff" />
+        <Text style={styles.statusText}>En ligne</Text>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: colors.primary, 
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 10, // Padding pour iOS (status bar)
-    paddingBottom: 20,
-    
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 14,
+  },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoWrapper: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
     resizeMode: 'contain',
-    borderRadius: 20,
+    borderRadius: 16,
   },
   title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.3,
   },
-  profilePic: {
-    width: 40,
-    height: 40,
+  subtitle: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '500',
+    marginTop: 1,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 20,
+    gap: 4,
+  },
+  statusText: {
+    fontSize: 11,
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 

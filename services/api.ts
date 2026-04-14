@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-const API_URL = 'https://apirestaurant.mrepublique.com/api'; 
+const API_URL = 'https://apirestaurant.mrepublique.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -29,15 +29,21 @@ api.interceptors.response.use(
 
 
 export const getCommandes = async () => {
-  
   return api.get('/toutesCommandes');
 };
 
 export const prendreLivraison = async (commandeId: string) => {
   return api.post(`/livraisons/prendre/${commandeId}`);
-}
+};
+
 export const getLivraisons = async () => {
   return api.get('/livraisons/mes');
+};
+
+export const marquerLivre = async (livraisonId: number, codeValidation: string) => {
+  return api.post(`/livraisons/livrer/${livraisonId}`, {
+    code_validation: codeValidation,
+  });
 };
 
 

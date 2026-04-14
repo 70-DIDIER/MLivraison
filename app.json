@@ -3,8 +3,14 @@
     "name": "M'Livraison",
     "slug": "Mlivraison",
     "version": "1.0.0",
-    "platforms": ["ios", "android", "web"],
-    "assetBundlePatterns": ["**/*"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "icon": "./assets/images/splash.png",
     "splash": {
       "image": "./assets/images/splash.png",
@@ -17,7 +23,15 @@
     },
     "ios": {
       "bundleIdentifier": "com.tonorganisation.mlivraison",
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c410f791-1dd3-4c00-989f-2037abd5a4ca"
+      }
     }
   }
 }
